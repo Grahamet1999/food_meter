@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "1006356627249",
+    "project_id": "food-meter-9832d",
+    "storage_bucket": "food-meter-9832d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006356627249:android:f0a40e293e650c0802ba10",
+        "android_client_info": {
+          "package_name": "com.grahamet.food_meter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1006356627249-4e25530t4dhpnkui5jti7jh19510k153.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.grahamet.food_meter",
+            "certificate_hash": "e55f1ac803156eaade31c4e91a6dd7d5276354ab"
+          }
+        },
+        {
+          "client_id": "1006356627249-88p2omrg8omv99louuffcbcf79blqu5c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.grahamet.food_meter",
+            "certificate_hash": "844da8fc72f8837b434e8708ee89fb6231888a77"
+          }
+        },
+        {
+          "client_id": "1006356627249-2qdn56jrb3j475436fjl2e8dvpfu8268.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDblQxaalSWJ4q88eC1gEobXIcBv8C5Z7c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1006356627249-2qdn56jrb3j475436fjl2e8dvpfu8268.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1006356627249-8kssbabr66puhbapud3trosl45caghop.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.foodMeter"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
