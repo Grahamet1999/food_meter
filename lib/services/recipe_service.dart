@@ -33,9 +33,18 @@ class RecipeSuggestion {
 /// Calls the `suggestRecipes` Cloud Function to get recipe ideas from a
 /// list of pantry items, weighted toward items expiring soonest.
 class RecipeService {
+  /// Cap on items sent to the Cloud Function. Large pantries (many storage
+  /// locations, dozens of items each) can exceed the server's item limit, so
+  /// only the soonest-expiring items are sent — they're the most relevant
+  /// for "use it before it goes bad" suggestions anyway.
+  static const int _maxItems = 60;
+
   static Future<List<RecipeSuggestion>> suggest(List<PantryItem> items) async {
     final now = DateTime.now();
-    final payload = items
+    final sorted = List<PantryItem>.from(items)
+      ..sort((a, b) => a.expirationDate.compareTo(b.expirationDate));
+    final payload = sorted
+        .take(_maxItems)
         .map((item) => {
               'name': item.name,
               'daysUntilExpiration': item.expirationDate.difference(now).inDays,
