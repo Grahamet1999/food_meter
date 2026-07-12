@@ -2,6 +2,8 @@ const functions = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 admin.initializeApp();
 
+exports.suggestRecipes = require("./recipes").suggestRecipes;
+
 exports.sendExpiringItemNotifications = functions.pubsub
   .schedule("every day 02:00") // Runs every day at 2:00 AM UTC
   .timeZone("Etc/UTC")

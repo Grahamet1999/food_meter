@@ -8,6 +8,7 @@ import 'search_categories_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'add_item_screen.dart';
+import 'recipe_suggestions_screen.dart';
 import '../utils/expiration_progress.dart';
 
 /// Main screen displaying the list of pantry items grouped by category.
@@ -50,6 +51,16 @@ class _PantryListScreenState extends State<PantryListScreen> {
           },
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.restaurant_menu),
+            tooltip: 'Recipe Ideas',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RecipeSuggestionsScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             tooltip: 'About',
