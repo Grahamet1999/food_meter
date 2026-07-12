@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'add_item_screen.dart';
 import 'recipe_suggestions_screen.dart';
+import 'ingredient_picker_screen.dart';
 import '../utils/expiration_progress.dart';
 
 /// Main screen displaying the list of pantry items grouped by category.
@@ -38,15 +39,15 @@ class _PantryListScreenState extends State<PantryListScreen> {
           icon: const Icon(Icons.forum, color: Colors.white),
           tooltip: 'Join our Discord – report bugs & give feedback',
           onPressed: () async {
-            final uri = Uri.parse('https://discord.gg/8ACbWP6CV5');
-            final launched = await launchUrl(uri, mode: LaunchMode.inAppWebView);
+            final uri = Uri.parse('https://discord.gg/bEMFUTGWbP');
+            // Discord invite links redirect through a deep-link attribution
+            // URL (discord://...) that an in-app WebView can't handle, so
+            // this must open externally (Discord app or the device browser).
+            final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
             if (!launched && context.mounted) {
-              final fallbackLaunched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-              if (!fallbackLaunched && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Could not open link on this device.')),
-                );
-              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Could not open link on this device.')),
+              );
             }
           },
         ),
@@ -54,12 +55,7 @@ class _PantryListScreenState extends State<PantryListScreen> {
           IconButton(
             icon: const Icon(Icons.restaurant_menu),
             tooltip: 'Recipe Ideas',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const RecipeSuggestionsScreen()),
-              );
-            },
+            onPressed: () => _showRecipeModeDialog(context),
           ),
           IconButton(
             icon: const Icon(Icons.info_outline),
@@ -245,6 +241,46 @@ class _PantryListScreenState extends State<PantryListScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showRecipeModeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF002244),
+        title: const Text('Get Recipe Ideas', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Build a recipe from items expiring soonest, or pick your own ingredients?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const IngredientPickerScreen()),
+              );
+            },
+            child: const Text('Choose ingredients'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1B5E20),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RecipeSuggestionsScreen()),
+              );
+            },
+            child: const Text('Use expiring items'),
+          ),
+        ],
       ),
     );
   }
