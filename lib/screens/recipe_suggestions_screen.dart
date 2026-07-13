@@ -156,23 +156,33 @@ class _RecipeCard extends StatelessWidget {
           recipe.title,
           style: const TextStyle(color: Color(0xFF003366), fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        subtitle: recipe.usesExpiringItems.isEmpty
-            ? null
-            : Padding(
+        subtitle: (_hasMeta(recipe) || recipe.usesExpiringItems.isNotEmpty)
+            ? Padding(
                 padding: const EdgeInsets.only(top: 4.0),
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: recipe.usesExpiringItems
-                      .map((name) => Chip(
-                            label: Text(name, style: const TextStyle(fontSize: 12)),
-                            backgroundColor: Colors.orange[100],
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ))
-                      .toList(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_hasMeta(recipe)) ...[
+                      Text(_metaLine(recipe), style: const TextStyle(color: Color(0xFF666666), fontSize: 12)),
+                      const SizedBox(height: 4),
+                    ],
+                    if (recipe.usesExpiringItems.isNotEmpty)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: recipe.usesExpiringItems
+                            .map((name) => Chip(
+                                  label: Text(name, style: const TextStyle(fontSize: 12)),
+                                  backgroundColor: Colors.orange[100],
+                                  visualDensity: VisualDensity.compact,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ))
+                            .toList(),
+                      ),
+                  ],
                 ),
-              ),
+              )
+            : null,
         iconColor: const Color(0xFF003366),
         collapsedIconColor: const Color(0xFF003366),
         children: [
@@ -192,12 +202,31 @@ class _RecipeCard extends StatelessWidget {
                   const SizedBox(height: 8),
                 ],
                 const Text('Instructions', style: TextStyle(color: Color(0xFF003366), fontWeight: FontWeight.bold)),
-                Text(recipe.instructions, style: const TextStyle(color: Color(0xFF003366))),
+                const SizedBox(height: 4),
+                for (var i = 0; i < recipe.instructions.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      '${i + 1}. ${recipe.instructions[i]}',
+                      style: const TextStyle(color: Color(0xFF003366)),
+                    ),
+                  ),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  bool _hasMeta(RecipeSuggestion recipe) =>
+      recipe.servings != null || recipe.prepTimeMinutes != null || recipe.cookTimeMinutes != null;
+
+  String _metaLine(RecipeSuggestion recipe) {
+    final parts = <String>[];
+    if (recipe.servings != null) parts.add('${recipe.servings} servings');
+    if (recipe.prepTimeMinutes != null) parts.add('${recipe.prepTimeMinutes} min prep');
+    if (recipe.cookTimeMinutes != null) parts.add('${recipe.cookTimeMinutes} min cook');
+    return parts.join(' · ');
   }
 }
