@@ -5,6 +5,7 @@ import '../models/pantry_item.dart';
 import '../providers/pantry_provider.dart';
 import '../services/barcode_lookup_service.dart';
 import '../screens/barcode_scanner_screen.dart';
+import '../utils/shelf_life_estimator.dart';
 
 /// Shared form for creating or editing a [PantryItem].
 ///
@@ -44,6 +45,8 @@ class _PantryItemFormState extends State<PantryItemForm> {
   late DateTime _expirationDate;
   late String _category;
   bool _isLookingUpProduct = false;
+  bool _expirationManuallySet = false;
+  String? _estimateReason;
 
   static const _commonUnits = ['', 'g', 'kg', 'ml', 'L', 'oz', 'lb'];
 
@@ -65,6 +68,18 @@ class _PantryItemFormState extends State<PantryItemForm> {
     _nameController.dispose();
     _quantityController.dispose();
     super.dispose();
+  }
+
+  /// Refreshes the suggested expiration date from the current name/category,
+  /// unless this is an edit (existing item) or the user has already picked
+  /// a date themselves.
+  void _maybeUpdateSuggestedExpiration() {
+    if (widget.initial != null || _expirationManuallySet) return;
+    final estimate = ShelfLifeEstimator.estimate(name: _name, category: _category);
+    setState(() {
+      _expirationDate = DateTime.now().add(Duration(days: estimate.days));
+      _estimateReason = estimate.reason;
+    });
   }
 
   Future<void> _scanBarcode() async {
@@ -96,6 +111,7 @@ class _PantryItemFormState extends State<PantryItemForm> {
         _unit = product.unit!;
       }
     });
+    _maybeUpdateSuggestedExpiration();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Filled from scanned product: ${product.name}')),
     );
@@ -152,6 +168,10 @@ class _PantryItemFormState extends State<PantryItemForm> {
             decoration: _decoration('Name'),
             style: const TextStyle(fontSize: 18, color: Colors.white),
             validator: (value) => value == null || value.isEmpty ? 'Enter a name' : null,
+            onChanged: (value) {
+              _name = value;
+              _maybeUpdateSuggestedExpiration();
+            },
             onSaved: (value) => _name = value ?? '',
           ),
           const SizedBox(height: 16),
@@ -277,7 +297,10 @@ class _PantryItemFormState extends State<PantryItemForm> {
                               ),
                             ];
                           },
-                          onChanged: (value) => setState(() => _category = value ?? ''),
+                          onChanged: (value) {
+                            setState(() => _category = value ?? '');
+                            _maybeUpdateSuggestedExpiration();
+                          },
                           validator: (value) => (value == null || value.isEmpty) ? 'Select a category' : null,
                           onSaved: (value) {
                             if (value != '__new__') _category = value ?? '';
@@ -313,7 +336,12 @@ class _PantryItemFormState extends State<PantryItemForm> {
                 lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
               );
               if (!mounted) return;
-              if (picked != null) setState(() => _expirationDate = picked);
+              if (picked != null) {
+                setState(() {
+                  _expirationDate = picked;
+                  _expirationManuallySet = true;
+                });
+              }
             },
             child: Container(
               decoration: BoxDecoration(
@@ -340,13 +368,17 @@ class _PantryItemFormState extends State<PantryItemForm> {
           ),
           if (widget.initial == null) ...[
             const SizedBox(height: 8),
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                "Defaults to 30 days out — this isn't read from the product "
-                '(barcodes and manual entry both need this checked), so update it '
-                "to match what's actually printed on the package.",
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                _estimateReason != null
+                    ? "Estimated for ${_estimateReason!} — this isn't read from the "
+                        'product (barcodes and manual entry both need this checked), '
+                        "so update it to match what's actually printed on the package."
+                    : "Defaults to 30 days out — this isn't read from the product "
+                        '(barcodes and manual entry both need this checked), so update it '
+                        "to match what's actually printed on the package.",
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ),
           ],
