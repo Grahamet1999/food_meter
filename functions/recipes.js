@@ -11,14 +11,18 @@ const RECIPE_SCHEMA = {
         type: "object",
         properties: {
           title: {type: "string"},
+          servings: {type: "integer"},
+          prepTimeMinutes: {type: "integer"},
+          cookTimeMinutes: {type: "integer"},
           usesExpiringItems: {type: "array", items: {type: "string"}},
           ingredientsUsed: {type: "array", items: {type: "string"}},
           ingredientsNeeded: {type: "array", items: {type: "string"}},
-          instructions: {type: "string"},
+          instructions: {type: "array", items: {type: "string"}},
         },
         required: [
-          "title", "usesExpiringItems", "ingredientsUsed",
-          "ingredientsNeeded", "instructions",
+          "title", "servings", "prepTimeMinutes", "cookTimeMinutes",
+          "usesExpiringItems", "ingredientsUsed", "ingredientsNeeded",
+          "instructions",
         ],
         additionalProperties: false,
       },
@@ -31,7 +35,7 @@ const RECIPE_SCHEMA = {
 /**
  * Suggests recipes from the caller's pantry items, prioritizing items
  * expiring soonest. Expects `data.items` as an array of
- * `{name: string, daysUntilExpiration: number}`.
+ * `{name: string, daysUntilExpiration: number, quantity?: number, unit?: string}`.
  */
 exports.suggestRecipes = functions
   .runWith({secrets: ["ANTHROPIC_API_KEY"]})
@@ -59,7 +63,10 @@ exports.suggestRecipes = functions
         const expiryNote = typeof days === "number" ?
           ` (expires in ${days} day${days === 1 ? "" : "s"})` :
           "";
-        return `- ${item.name}${expiryNote}`;
+        const amountNote = typeof item.quantity === "number" ?
+          ` — ${item.quantity}${item.unit ? ` ${item.unit}` : ""}` :
+          "";
+        return `- ${item.name}${amountNote}${expiryNote}`;
       })
       .join("\n");
 
@@ -67,13 +74,18 @@ exports.suggestRecipes = functions
 
     const response = await client.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 1536,
+      max_tokens: 2048,
       system: "You are a home cooking assistant. Suggest simple, realistic " +
       "recipes using the given pantry ingredients, prioritizing recipes " +
       "that use items expiring soonest so nothing goes to waste. Assume " +
       "common staples (salt, pepper, cooking oil, water) are available " +
       "even if not listed. Only suggest recipes that are genuinely " +
-      "cookable with the given ingredients plus common staples.",
+      "cookable with the given ingredients plus common staples. Pay " +
+      "attention to the quantity listed for each pantry item and size " +
+      "the recipe's servings so it doesn't call for more of an item " +
+      "than what's actually on hand. Give a realistic servings count, " +
+      "prepTimeMinutes, and cookTimeMinutes, and write instructions as " +
+      "a list of short, numbered steps rather than one long paragraph.",
       messages: [{
         role: "user",
         content: `Here is what's in my pantry:\n${ingredientList}\n\n` +

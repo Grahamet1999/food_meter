@@ -4,13 +4,19 @@ import '../models/pantry_item.dart';
 /// A recipe suggested from the user's current pantry contents.
 class RecipeSuggestion {
   final String title;
+  final int? servings;
+  final int? prepTimeMinutes;
+  final int? cookTimeMinutes;
   final List<String> usesExpiringItems;
   final List<String> ingredientsUsed;
   final List<String> ingredientsNeeded;
-  final String instructions;
+  final List<String> instructions;
 
   const RecipeSuggestion({
     required this.title,
+    this.servings,
+    this.prepTimeMinutes,
+    this.cookTimeMinutes,
     required this.usesExpiringItems,
     required this.ingredientsUsed,
     required this.ingredientsNeeded,
@@ -22,10 +28,13 @@ class RecipeSuggestion {
         (value as List<dynamic>? ?? const []).map((e) => e.toString()).toList();
     return RecipeSuggestion(
       title: json['title'] as String? ?? 'Untitled recipe',
+      servings: (json['servings'] as num?)?.toInt(),
+      prepTimeMinutes: (json['prepTimeMinutes'] as num?)?.toInt(),
+      cookTimeMinutes: (json['cookTimeMinutes'] as num?)?.toInt(),
       usesExpiringItems: stringList(json['usesExpiringItems']),
       ingredientsUsed: stringList(json['ingredientsUsed']),
       ingredientsNeeded: stringList(json['ingredientsNeeded']),
-      instructions: json['instructions'] as String? ?? '',
+      instructions: stringList(json['instructions']),
     );
   }
 }
@@ -48,6 +57,8 @@ class RecipeService {
         .map((item) => {
               'name': item.name,
               'daysUntilExpiration': item.expirationDate.difference(now).inDays,
+              'quantity': item.quantity,
+              'unit': item.unit,
             })
         .toList();
 
